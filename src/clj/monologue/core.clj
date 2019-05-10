@@ -1,50 +1,34 @@
 (ns monologue.core
-  (:require
-    [monologue.handler :as handler]
-    [monologue.nrepl :as nrepl]
-    [luminus.http-server :as http]
-    [monologue.config :refer [env]]
-    [clojure.tools.cli :refer [parse-opts]]
-    [clojure.tools.logging :as log]
-    [mount.core :as mount])
-  (:gen-class))
+  (:require [clojure.java.io :as io]
+            [compojure.core :refer :all]
+            [compojure.route :as route]
+            [ring.adapter.jetty :refer [run-jetty]]
+            [ring.middleware.json :refer [wrap-json-response]]
+            [ring.util.response :refer [response]]
+            ;;[markdown.core :refer [md-to-html-string]]
+            [monologue.models.monouser :refer [MonoUser]]
+            [toucan.db :as db])
+  (:use [markdown.core]))
 
-(def cli-options
-  [["-p" "--port PORT" "Port number"
-    :parse-fn #(Integer/parseInt %)]])
+(db/set-default-db-connection!
+  {:classname "org.postgresql.Driver"
+  :subprotocol "postgresql"
+  :subname "//localhost:5432/mono"
+  :user "snailoff"})
 
-(mount/defstate ^{:on-reload :noop} http-server
-  :start
-  (http/start
-    (-> env
-        (assoc  :handler #'handler/app)
-        (update :io-threads #(or % (* 2 (.availableProcessors (Runtime/getRuntime)))))
-        (update :port #(or (-> env :options :port) %))))
-  :stop
-  (http/stop http-server))
+(defn userhandler [request]
+  (response {:userid (md-to-html-string (db/select-one-field :passwd MonoUser
+                                                           :userid "soso"))}))
 
-(mount/defstate ^{:on-reload :noop} repl-server
-  :start
-  (when (env :nrepl-port)
-    (nrepl/start {:bind (env :nrepl-bind)
-                  :port (env :nrepl-port)}))
-  :stop
-  (when repl-server
-    (nrepl/stop repl-server)))
+(defroutes handler
+  (GET "/" [] (-> "public/index.html" io/resource slurp))
+  (GET "/user" [] (wrap-json-response userhandler))
+
+  (route/files "/" {:root "/public"})
+  (route/resources "/"))
 
 
-(defn stop-app []
-  (doseq [component (:stopped (mount/stop))]
-    (log/info component "stopped"))
-  (shutdown-agents))
+(run-jetty handler {:port 3000})
 
-(defn start-app [args]
-  (doseq [component (-> args
-                        (parse-opts cli-options)
-                        mount/start-with-args
-                        :started)]
-    (log/info component "started"))
-  (.addShutdownHook (Runtime/getRuntime) (Thread. stop-app)))
 
-(defn -main [& args]
-  (start-app args))
+

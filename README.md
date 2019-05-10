@@ -1,20 +1,23 @@
 # monologue
 
-generated using Luminus version "3.29"
+A [reagent](https://github.com/reagent-project/reagent) application designed to ... well, that part is up to you.
 
+## Development Mode
 
-## Prerequisites
+### Run application:
 
-You will need [Leiningen][1] 2.0 or above installed.
+```
+lein clean
+lein figwheel dev
+```
 
-[1]: https://github.com/technomancy/leiningen
+Figwheel will automatically push cljs changes to the browser.
 
-## Running
+Wait a bit, then browse to [http://localhost:3449](http://localhost:3449).
 
-To start a web server for the application, run:
+## Production Build
 
-    lein run 
-
-## License
-
-Copyright © 2019 snailoff
+```
+lein clean
+lein cljsbuild once min
+```

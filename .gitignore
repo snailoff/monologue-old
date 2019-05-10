@@ -13,3 +13,7 @@ pom.xml.asc
 .nrepl-port
 .cpcache/
 /log/
+/*.log
+/*-init.clj
+/resources/public/js
+out
