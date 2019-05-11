@@ -1,5 +1,6 @@
 (defproject monologue "0.1.0-SNAPSHOT"
-  :dependencies [[com.bhauman/rebel-readline "0.1.4"]
+  :dependencies [[cljs-http "0.1.46"]
+                 [com.bhauman/rebel-readline "0.1.4"]
                  [compojure "1.6.1"]
                  [markdown-clj "1.10.0"]
                  [nrepl "0.6.0"]

@@ -1,19 +1,24 @@
 (ns monologue.core
-  (:require-macros [secretary.core :refer [defroute]])
+  (:require-macros [cljs.core.async.macros :refer [go]] 
+                   [secretary.core :refer [defroute]])
   (:import goog.History)
   (:require
-   [secretary.core :as secretary]
-   [goog.events :as events]
-   [goog.history.EventType :as EventType]
-   [reagent.core :as reagent]
-   ))
+    [cljs-http.client :as http] 
+    [cljs.core.async :refer [<!]]
+    [secretary.core :as secretary] 
+    [goog.events :as events] 
+    [goog.history.EventType :as EventType] 
+    [reagent.core :as reagent]))
 
+(enable-console-print!)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Vars
 
 (defonce app-state
-  (reagent/atom {}))
+  (reagent/atom {:knot ""
+                 :summary ""
+                 :content ""}))
 
 
 
@@ -32,10 +37,7 @@
   (secretary/set-config! :prefix "#")
 
   (defroute "/" []
-    (swap! app-state assoc :page :home))
-
-  (defroute "/about" []
-    (swap! app-state assoc :page :about))
+    (swap! app-state assoc :page :mono))
 
   ;; add routes here
 
@@ -47,13 +49,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pages
 
-(defn home [ratom]
-  [:div [:h1 "Home Page"]
-   [:a {:href "#/about"} "about page"]])
-
-(defn about [ratom]
-  [:div [:h1 "About Page"]
-   [:a {:href "#/"} "home page"]])
+(defn mono [ratom]
+    (reagent/create-class
+      {:component-will-mount (fn []
+                              (go (let [response (<! (http/get "http://121.134.146.100:3000/user"))]
+                                    (swap! app-state assoc :knot (:userid (:body response))))))
+       :reagent-render (fn [] 
+                         [:div 
+                          [:h1 "hi. monologue."] 
+                          [:div {:dangerouslySetInnerHTML {:__html (:knot @ratom)}}]])
+                         })) 
 
 
 
@@ -61,8 +66,7 @@
 ;; Initialize App
 
 (defmulti page identity)
-(defmethod page :home [] home)
-(defmethod page :about [] about)
+(defmethod page :mono [] mono)
 (defmethod page :default [] (fn [_] [:div]))
 
 (defn current-page [ratom]
