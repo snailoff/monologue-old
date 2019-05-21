@@ -18,13 +18,16 @@
   :source-paths ["src/clj"]
 
   :plugins [[lein-cljsbuild "1.1.4"]
-            [lein-ring "0.12.5"]]
+            [lein-ring "0.12.5"]
+            [lein-auto "0.1.3"]]
 
   :clean-targets ^{:protect false} ["resources/public/js"
                                     "target"]
   :main monologue.core
 
   :figwheel {:css-dirs ["resources/public/css"]}
+  :auto {:default {:file-pattern #"\.(clj|cljs|cljx|cljc|edn)$"
+                   :wait-time 3}}
 
   :profiles
   {:dev

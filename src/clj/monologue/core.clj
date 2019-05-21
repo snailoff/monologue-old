@@ -8,7 +8,8 @@
             ;;[markdown.core :refer [md-to-html-string]]
             [monologue.models.monouser :refer [MonoUser]]
             [toucan.db :as db])
-  (:use [markdown.core]))
+  (:use [markdown.core]
+        [ring.middleware.params :only [wrap-params]]))
 
 (db/set-default-db-connection!
   {:classname "org.postgresql.Driver"
@@ -16,19 +17,30 @@
   :subname "//localhost:5432/mono"
   :user "snailoff"})
 
+;;(defn pieceUpdateHandler [{:keys [con]}]
+(defn pieceUpdateHandler [request]
+  (println "*** pieceUpdateHandler! ***")
+  (println (str "con:" (:params request)))
+  (response {:success (db/update! MonoUser 1 :passwd (get (:params request) "con"))}))
+
 (defn userhandler [request]
+  (println "*** userhandler ***")
   (response {:userid (md-to-html-string (db/select-one-field :passwd MonoUser
                                                            :userid "soso"))}))
 
-(defroutes handler
+(defroutes rootRoutes
   (GET "/" [] (-> "public/index.html" io/resource slurp))
-  (GET "/user" [] (wrap-json-response userhandler))
+  (GET "/user" [] 
+       (wrap-json-response userhandler))
+  (GET "/piece" []
+       (wrap-json-response pieceUpdateHandler))
 
   (route/files "/" {:root "/public"})
   (route/resources "/"))
 
+(def app (wrap-params rootRoutes))
 
-(run-jetty handler {:port 3000})
+(run-jetty app {:port 3000})
 
 
 
