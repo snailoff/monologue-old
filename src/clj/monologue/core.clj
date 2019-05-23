@@ -1,12 +1,12 @@
 (ns monologue.core
   (:require [clojure.java.io :as io]
-            [compojure.core :refer :all]
+            [compojure.api.sweet :refer :all]
+            [compojure.coercions :refer :all]
             [compojure.route :as route]
-            [ring.adapter.jetty :refer [run-jetty]]
-            [ring.middleware.json :refer [wrap-json-response]]
-            [ring.util.response :refer [response]]
-            ;;[markdown.core :refer [md-to-html-string]]
-            [monologue.models :refer [mono-user, mono-piece]]
+            [ring.util.http-response :refer :all]
+            [ring.middleware.reload :refer [wrap-reload]]
+            [schema.core :as s]
+            [monologue.models :refer [MonoUser, MonoMain]]
             [toucan.db :as db])
   (:use [markdown.core]))
 
@@ -17,28 +17,48 @@
   :user "snailoff"})
 
 
-(defn userhandler [request]
-  (println "*** userhandler ***")
-  (response {:userid (md-to-html-string (db/select-one-field :passwd mono-user
-                                                           :userid "soso"))}))
+(def swagger-config
+  {:ui "/swagger"
+   :spec "/swagger.json"
+   :options {:ui {:validatiorUrl nil}
+             :data {:info {:version "1.0.0", :title "Monologue API"}}}})
 
-(defroutes rootRoutes
-  (GET "/" [] (-> "public/index.html" io/resource slurp))
+(def app
+  (api 
+    {:swagger swagger-config} 
+    (undocumented 
+      (GET "/" [] (-> "public/index.html" io/resource slurp))
+      (GET "/favicon.ico" [] (ok {:result "ico"}))
+      (route/files "/" {:root "/public"}) 
+      (route/resources "/"))
 
-  (GET "/user" [] (wrap-json-response userhandler))
+    (context "/user" []
+             :tags ["user"]
+             (GET "/" [] 
+                  :summary "내 정보 가져옴...."
+                  (ok {:userid (md-to-html-string (db/select-one-field :userid MonoUser
+                                                                       :userid "soso"))})))
+    (context "/piece" []
+             :tags ["piece"]
+             (POST "/create" []
+                   :query-params [realday, knotday, content] 
+                   :summary "piece 만들기"
+                   (db/insert! MonoMain 
+                               :content content
+                               :realday realday
+                               :knotday knotday 
+                               :changed (java.time.LocalDateTime/now)) 
+                   (ok {:result true}))
 
-  (GET "/piece/:piece-id" [piece-id] (db/select-one-field :content mono-piece 
-                                                          :id piece-id))
-  (PUT "/piece/:piece-id" [piece-id, con, knotname] (db/update! mono-user piece-id :passwd con) "ok")
+             (GET "/first" []
+                  :summary "어떤 piece를 가져올지 모를때"
+                  (ok (db/select-one MonoMain :id 1)))
 
-  (GET "/favicon.ico" [] "not yet")
+             (GET "/:pid" []
+                  :path-params [pid :- s/Int]
+                  :summary "piece 한 조각 가져오기"
+                  (ok (db/select-one MonoMain :id pid))))))
+             
 
-  (route/files "/" {:root "/public"})
-  (route/resources "/"))
-
-(def app rootRoutes)
-
-(run-jetty app {:port 3000})
-
-
-
+(def rr-app
+  (wrap-reload #'app))

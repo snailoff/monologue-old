@@ -1,6 +1,6 @@
 (ns monologue.models
   (:require [toucan.models :refer [defmodel]]))
 
-(defmodel mono-user :mono_user)
+(defmodel MonoUser :mono_user)
 
-(defmodel mono-piece :mono_piece)
+(defmodel MonoMain :mono_main)

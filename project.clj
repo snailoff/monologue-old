@@ -3,10 +3,12 @@
                  [com.bhauman/rebel-readline "0.1.4"]
                  [compojure "1.6.1"]
                  [markdown-clj "1.10.0"]
+                 [metosin/compojure-api "1.1.11"]
                  [nrepl "0.6.0"]
                  [org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.9.946"]
                  [org.postgresql/postgresql "42.2.5"]
+                 [prismatic/schema "1.1.10"]
                  [reagent "0.7.0"]
                  [ring "1.7.1"]
                  [ring/ring-json "0.4.0"]
@@ -23,7 +25,9 @@
 
   :clean-targets ^{:protect false} ["resources/public/js"
                                     "target"]
-  :main monologue.core
+;;  :main monologue.core
+  :ring {:handler monologue.core/rr-app}
+
 
   :figwheel {:css-dirs ["resources/public/css"]}
   :auto {:default {:file-pattern #"\.(clj|cljs|cljx|cljc|edn)$"
