@@ -16,9 +16,9 @@
 ;; Vars
 
 (defonce app-state
-  (reagent/atom {:knot ""
-                 :summary ""
-                 :content ""}))
+  (reagent/atom {:piece {} 
+                 :content ""
+                 }))
 
 
 
@@ -48,17 +48,24 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pages
+(defn monourl [qs]
+  (str "http://121.134.146.100:3000/" qs))
 
 (defn mono [ratom]
     (reagent/create-class
       {:component-will-mount (fn []
-                              (go (let [response (<! (http/get "http://121.134.146.100:3000/user"))]
-                                    (swap! app-state assoc :knot (:userid (:body response))))))
+                              (go (let [response (<! (http/get (monourl "piece/2")))] 
+                                    (swap! app-state 
+                                           assoc :piece (:body response)))))
+
        :reagent-render (fn [] 
                          [:div 
-                          [:h1 "hi. monologue."] 
-                          [:div {:dangerouslySetInnerHTML {:__html (:knot @ratom)}}]])
-                         })) 
+                           [:h1 "hi. monologue.."] 
+                           [:p (:knotday (:piece @ratom))]
+                           [:p (:realday (:piece @ratom))]
+                           [:p (:content (:piece @ratom))]
+                         ]
+                       )})) 
 
 
 

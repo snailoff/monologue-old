@@ -27,7 +27,10 @@
   (api 
     {:swagger swagger-config} 
     (undocumented 
-      (GET "/" [] (-> "public/index.html" io/resource slurp))
+      (GET "/" [] (clojure.string/replace (-> "public/index.html" io/resource slurp) 
+                                          "RANDOM" 
+                                          (str (rand 100))))
+
       (GET "/favicon.ico" [] (ok {:result "ico"}))
       (route/files "/" {:root "/public"}) 
       (route/resources "/"))
@@ -36,8 +39,8 @@
              :tags ["user"]
              (GET "/" [] 
                   :summary "내 정보 가져옴...."
-                  (ok {:userid (md-to-html-string (db/select-one-field :userid MonoUser
-                                                                       :userid "soso"))})))
+                  (ok (db/select-one MonoUser :userid "soso"))))
+
     (context "/piece" []
              :tags ["piece"]
              (POST "/create" []
@@ -45,20 +48,45 @@
                    :summary "piece 만들기"
                    (db/insert! MonoMain 
                                :content content
-                               :realday realday
+                               :realday (if (empty? realday) "20190101" realday)
                                :knotday knotday 
                                :changed (java.time.LocalDateTime/now)) 
                    (ok {:result true}))
 
-             (GET "/first" []
-                  :summary "어떤 piece를 가져올지 모를때"
-                  (ok (db/select-one MonoMain :id 1)))
+             (PUT "/:pid" []
+                  :path-params [pid :- s/Int] 
+                  :query-params [realday :- String, knotday :- String, {content :- String ""}] 
+                  :summary "piece 바꾸기"
+                  (db/update! MonoMain pid 
+                              :content content 
+                              :realday realday 
+                              :knotday knotday 
+                              :changed (java.time.LocalDateTime/now))
+                  (ok {:result true}))
+             (PUT "/:pid/knot" []
+                  :path-params [pid :- s/Int] 
+                  :query-params [knotday]
+                  :summary "piece 바꾸기"
+                  (db/update! MonoMain pid 
+                              :knotday knotday 
+                              :changed (java.time.LocalDateTime/now))
+                  (ok {:result true}))
+
+             (GET "/any" []
+                  :summary "어떤 piece 가져오기"
+                  (ok (db/select-one MonoMain :id 2)))
 
              (GET "/:pid" []
                   :path-params [pid :- s/Int]
-                  :summary "piece 한 조각 가져오기"
-                  (ok (db/select-one MonoMain :id pid))))))
+                  :summary "piece 가져오기"
+                  (ok (db/select-one MonoMain :id pid)))
+
+             (DELETE "/:pid" []
+                     :path-params [pid :- s/Int]
+                     :summary "piece 지우기"
+                     (ok (db/delete! MonoMain :id pid)))
              
+             )))
 
 (def rr-app
   (wrap-reload #'app))
