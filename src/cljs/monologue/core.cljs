@@ -49,12 +49,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pages
 (defn monourl [qs]
-  (str "http://121.134.146.100:3000/" qs))
+  (str "http://c.trunkcat.com:3000/" qs))
 
 (defn mono [ratom]
     (reagent/create-class
       {:component-will-mount (fn []
-                              (go (let [response (<! (http/get (monourl "piece/2")))] 
+                              (go (let [response (<! (http/get (monourl "piece/2")
+                                                               {:with-credentials? false}))] 
                                     (swap! app-state 
                                            assoc :piece (:body response)))))
 

@@ -4,6 +4,7 @@
             [compojure.coercions :refer :all]
             [compojure.route :as route]
             [ring.util.http-response :refer :all]
+            [ring.middleware.cors :refer [wrap-cors]]
             [ring.middleware.reload :refer [wrap-reload]]
             [schema.core :as s]
             [monologue.models :refer [MonoUser, MonoMain]]
@@ -89,4 +90,8 @@
              )))
 
 (def rr-app
-  (wrap-reload #'app))
+  (-> #'app 
+      wrap-reload 
+      (wrap-cors :access-control-allow-origin [#".*"] 
+                 :access-control-allow-methods [:get :put :post :delete])
+      ))

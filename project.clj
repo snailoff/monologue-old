@@ -12,6 +12,7 @@
                  [reagent "0.7.0"]
                  [ring "1.7.1"]
                  [ring/ring-json "0.4.0"]
+                 [ring-cors "0.1.13"]
                  [secretary "1.2.3"]
                  [toucan "1.12.0"]]
 
