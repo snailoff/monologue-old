@@ -17,7 +17,7 @@
 
 (defonce app-state
   (reagent/atom {:piece {} 
-                 :content ""
+                 :recents []
                  }))
 
 
@@ -41,6 +41,9 @@
 
   ;; add routes here
 
+  (defroute "/p/:pid" {pid :pid}
+    (swap! app-state assoc :page :mono :pid pid))
+
 
   (hook-browser-navigation!))
 
@@ -54,17 +57,30 @@
 (defn mono [ratom]
     (reagent/create-class
       {:component-will-mount (fn []
-                              (go (let [response (<! (http/get (monourl "piece/2")
+                              (go (let [response (<! (http/get (monourl (str "piece/" (:pid @ratom)))
                                                                {:with-credentials? false}))] 
                                     (swap! app-state 
-                                           assoc :piece (:body response)))))
+                                           assoc :piece (:body response))))
+
+                              (go (let [response (<! (http/get (monourl "piece/recents")
+                                                               {:with-credentials? false}))]
+                                    (swap! app-state
+                                           assoc :recents (:body response)))))
 
        :reagent-render (fn [] 
                          [:div 
                            [:h1 "hi. monologue.."] 
-                           [:p (:knotday (:piece @ratom))]
-                           [:p (:realday (:piece @ratom))]
-                           [:p (:content (:piece @ratom))]
+                           [:ul
+                            [:li (str "id - " (:id (:piece @ratom)))]
+                            [:li (str "knotday - " (:knotday (:piece @ratom)))]
+                            [:li (str "realday - " (:realday (:piece @ratom)))]
+                            [:li (str "content - " (:content (:piece @ratom)))]
+                            [:li (str "changed - " (:changed (:piece @ratom)))]
+                           ] 
+                           [:ul 
+                            (for [piece (:recents @ratom)] 
+                              [:li (:content piece)])
+                            ]
                          ]
                        )})) 
 

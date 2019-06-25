@@ -67,7 +67,7 @@
              (PUT "/:pid/knot" []
                   :path-params [pid :- s/Int] 
                   :query-params [knotday]
-                  :summary "piece 바꾸기"
+                  :summary "ppiece 바꾸기"
                   (db/update! MonoMain pid 
                               :knotday knotday 
                               :changed (java.time.LocalDateTime/now))
@@ -76,6 +76,10 @@
              (GET "/any" []
                   :summary "어떤 piece 가져오기"
                   (ok (db/select-one MonoMain :id 2)))
+
+             (GET "/recents" []
+                  :summary "최근 piece list 가져오기(id)"
+                  (ok (db/select MonoMain)))
 
              (GET "/:pid" []
                   :path-params [pid :- s/Int]
@@ -86,7 +90,6 @@
                      :path-params [pid :- s/Int]
                      :summary "piece 지우기"
                      (ok (db/delete! MonoMain :id pid)))
-             
              )))
 
 (def rr-app
