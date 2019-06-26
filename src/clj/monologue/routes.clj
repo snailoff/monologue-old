@@ -6,8 +6,7 @@
             [ring.middleware.json :refer [wrap-json-response]]
             [ring.util.response :refer [response]]
             ;;[markdown.core :refer [md-to-html-string]]
-            [monologue.models.monouser :refer [MonoUser]]
-            [toucan.db :as db])
+            )
   (:use [markdown.core]))
 
 

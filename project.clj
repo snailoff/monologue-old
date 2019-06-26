@@ -1,6 +1,7 @@
 (defproject monologue "0.1.0-SNAPSHOT"
   :dependencies [[cljs-http "0.1.46"]
                  [com.bhauman/rebel-readline "0.1.4"]
+                 [com.layerware/hugsql "0.4.9"]
                  [compojure "1.6.1"]
                  [markdown-clj "1.10.0"]
                  [metosin/compojure-api "1.1.11"]
@@ -14,7 +15,8 @@
                  [ring/ring-json "0.4.0"]
                  [ring-cors "0.1.13"]
                  [secretary "1.2.3"]
-                 [toucan "1.12.0"]]
+                ;; [toucan "1.12.0"]
+                 ]
 
   :min-lein-version "2.5.3"
 

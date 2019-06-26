@@ -3,20 +3,15 @@
             [compojure.api.sweet :refer :all]
             [compojure.coercions :refer :all]
             [compojure.route :as route]
+            [monologue.db :refer [db]]
+            [monologue.db.monopiece :as monopiece]
+            [monologue.db.monouser :as monouser]
             [ring.util.http-response :refer :all]
             [ring.middleware.cors :refer [wrap-cors]]
             [ring.middleware.reload :refer [wrap-reload]]
-            [schema.core :as s]
-            [monologue.models :refer [MonoUser, MonoMain]]
-            [toucan.db :as db])
+            [schema.core :as s])
+
   (:use [markdown.core]))
-
-(db/set-default-db-connection!
-  {:classname "org.postgresql.Driver"
-  :subprotocol "postgresql"
-  :subname "//localhost:5432/mono"
-  :user "snailoff"})
-
 
 (def swagger-config
   {:ui "/swagger"
@@ -25,72 +20,71 @@
              :data {:info {:version "1.0.0", :title "Monologue API"}}}})
 
 (def app
-  (api 
-    {:swagger swagger-config} 
-    (undocumented 
-      (GET "/" [] (clojure.string/replace (-> "public/index.html" io/resource slurp) 
+  (api
+    {:swagger swagger-config}
+    (undocumented
+      (GET "/" [] (clojure.string/replace (-> "public/index.html" io/resource slurp)
                                           "RANDOM" 
                                           (str (rand 100))))
 
       (GET "/favicon.ico" [] (ok {:result "ico"}))
-      (route/files "/" {:root "/public"}) 
+      (route/files "/" {:root "/public"})
       (route/resources "/"))
 
     (context "/user" []
              :tags ["user"]
-             (GET "/" [] 
+             (GET "/" []
                   :summary "내 정보 가져옴...."
-                  (ok (db/select-one MonoUser :userid "soso"))))
+                  (ok (monouser/all-users db))))
 
     (context "/piece" []
              :tags ["piece"]
-             (POST "/create" []
-                   :query-params [realday, knotday, content] 
-                   :summary "piece 만들기"
-                   (db/insert! MonoMain 
-                               :content content
-                               :realday (if (empty? realday) "20190101" realday)
-                               :knotday knotday 
-                               :changed (java.time.LocalDateTime/now)) 
-                   (ok {:result true}))
-
-             (PUT "/:pid" []
-                  :path-params [pid :- s/Int] 
-                  :query-params [realday :- String, knotday :- String, {content :- String ""}] 
-                  :summary "piece 바꾸기"
-                  (db/update! MonoMain pid 
-                              :content content 
-                              :realday realday 
-                              :knotday knotday 
-                              :changed (java.time.LocalDateTime/now))
-                  (ok {:result true}))
-             (PUT "/:pid/knot" []
-                  :path-params [pid :- s/Int] 
-                  :query-params [knotday]
-                  :summary "ppiece 바꾸기"
-                  (db/update! MonoMain pid 
-                              :knotday knotday 
-                              :changed (java.time.LocalDateTime/now))
-                  (ok {:result true}))
-
-             (GET "/any" []
-                  :summary "어떤 piece 가져오기"
-                  (ok (db/select-one MonoMain :id 2)))
 
              (GET "/recents" []
                   :summary "최근 piece list 가져오기(id)"
-                  (ok (db/select MonoMain)))
+                  (ok (monopiece/recents db {:limit 3})))
 
              (GET "/:pid" []
                   :path-params [pid :- s/Int]
                   :summary "piece 가져오기"
-                  (ok (db/select-one MonoMain :id pid)))
+                  (ok (monopiece/piece-by-id db {:id pid})))
 
-             (DELETE "/:pid" []
-                     :path-params [pid :- s/Int]
-                     :summary "piece 지우기"
-                     (ok (db/delete! MonoMain :id pid)))
-             )))
+
+             (POST "/create" []
+                   :query-params [content, knot, realday, knotday] 
+                   :summary "piece 만들기"
+                   (let [rid (monopiece/insert-piece db {:content content 
+                                                         :knot knot 
+                                                         :realday (if (empty? realday) "20190101" realday) 
+                                                         :knotday knotday 
+                                                         :changed (java.time.LocalDateTime/now)})] 
+                     (ok {:result true
+                          :id rid})))
+
+             (PUT "/:pid" []
+                  :path-params [pid :- s/Int]
+                  :query-params [content, knot, realday, knotday]
+                  :summary "piece 바꾸기"
+                  (monopiece/update-piece db {:id pid
+                                              :content content
+                                              :knot knot
+                                              :realday realday
+                                              :knotday knotday
+                                              :changed (java.time.LocalDateTime/now)})
+                  (ok {:result true}))
+
+             (PUT "/:pid/knot" []
+                  :path-params [pid :- s/Int]
+                  :query-params [knot]
+                  :summary "knot 바꾸기"
+                  (monopiece/update-piece-knot db {:id pid
+                                                   :knot knot})
+                  (ok {:result true}))
+
+
+             ))
+
+)
 
 (def rr-app
   (-> #'app 

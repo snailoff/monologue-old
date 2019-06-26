@@ -16,7 +16,7 @@
 ;; Vars
 
 (defonce app-state
-  (reagent/atom {:piece {} 
+  (reagent/atom {:piece {:id 1}
                  :recents []
                  }))
 
@@ -49,15 +49,15 @@
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Pages
 (defn monourl [qs]
   (str "http://c.trunkcat.com:3000/" qs))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Pages
 
 (defn mono [ratom]
     (reagent/create-class
       {:component-will-mount (fn []
-                              (go (let [response (<! (http/get (monourl (str "piece/" (:pid @ratom)))
+                              (go (let [response (<! (http/get (monourl (str "piece/1" (:id @ratom)))
                                                                {:with-credentials? false}))] 
                                     (swap! app-state 
                                            assoc :piece (:body response))))
@@ -69,20 +69,18 @@
 
        :reagent-render (fn [] 
                          [:div 
-                           [:h1 "hi. monologue.."] 
-                           [:ul
-                            [:li (str "id - " (:id (:piece @ratom)))]
-                            [:li (str "knotday - " (:knotday (:piece @ratom)))]
-                            [:li (str "realday - " (:realday (:piece @ratom)))]
-                            [:li (str "content - " (:content (:piece @ratom)))]
-                            [:li (str "changed - " (:changed (:piece @ratom)))]
-                           ] 
-                           [:ul 
-                            (for [piece (:recents @ratom)] 
-                              [:li (:content piece)])
-                            ]
+                           [:h1 "hi."]
+                           [:div (mono-body (:piece @ratom))]
+;;                           [:ul
+;;                            (for [piece (:recents @ratom)]
+;;                              [:li (:changed piece)])
+;;                            ]
                          ]
-                       )})) 
+                       )}))
+
+(defn mono-body [piece]
+  [:p (str "hi. " (:realday piece))]
+  )
 
 
 
