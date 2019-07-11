@@ -14,9 +14,7 @@
                  [ring "1.7.1"]
                  [ring/ring-json "0.4.0"]
                  [ring-cors "0.1.13"]
-                 [secretary "1.2.3"]
-                ;; [toucan "1.12.0"]
-                 ]
+                 [secretary "1.2.3"]]
 
   :min-lein-version "2.5.3"
 
@@ -28,11 +26,12 @@
 
   :clean-targets ^{:protect false} ["resources/public/js"
                                     "target"]
-;;  :main monologue.core
+
   :ring {:handler monologue.core/rr-app}
 
 
-  :figwheel {:css-dirs ["resources/public/css"]}
+  :figwheel {:css-dirs ["resources/public/css"]
+             :server-logfile "log/figwheel.log"}
   :auto {:default {:file-pattern #"\.(clj|cljs|cljx|cljc|edn)$"
                    :wait-time 3}}
 

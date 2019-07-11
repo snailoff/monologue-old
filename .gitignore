@@ -17,3 +17,6 @@ pom.xml.asc
 /*-init.clj
 /resources/public/js
 out
+*.swp
+.rebel_readline_history
+

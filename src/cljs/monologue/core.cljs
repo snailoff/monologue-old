@@ -69,19 +69,23 @@
 
        :reagent-render (fn [] 
                          [:div 
-                           [:h1 "hi."]
-                           [:div (mono-body (:piece @ratom))]
-;;                           [:ul
-;;                            (for [piece (:recents @ratom)]
-;;                              [:li (:changed piece)])
-;;                            ]
+                           [:h1 "monologue"]
+                           ;;[:div (mono-body (:piece @ratom))]
+                           (mono-body (:piece @ratom))
+                           (mono-recents (:recents @ratom))
                          ]
                        )}))
 
 (defn mono-body [piece]
-  [:p (str "hi. " (:realday piece))]
-  )
+  [:div 
+   [:p (str "hi. " (:realday piece))]
+  ])
 
+(defn mono-recents [recents]
+  [:ul
+   (for [piece recents]
+;;     [:li {:key (:id piece)} (:changed  piece)]
+     [:li "hehehehe1111" ])])
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
