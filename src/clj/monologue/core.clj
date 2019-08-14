@@ -24,7 +24,7 @@
     {:swagger swagger-config}
     (undocumented
       (GET "/" [] (clojure.string/replace (-> "public/index.html" io/resource slurp)
-                                          "RANDOM" 
+                                          "RANDOM"
                                           (str (rand 100))))
 
       (GET "/favicon.ico" [] (ok {:result "ico"}))
@@ -51,13 +51,13 @@
 
 
              (POST "/create" []
-                   :query-params [content, knot, realday, knotday] 
+                   :query-params [content, knot, realday, knotday]
                    :summary "piece 만들기"
-                   (let [rid (monopiece/insert-piece db {:content content 
-                                                         :knot knot 
-                                                         :realday (if (empty? realday) "20190101" realday) 
-                                                         :knotday knotday 
-                                                         :changed (java.time.LocalDateTime/now)})] 
+                   (let [rid (monopiece/insert-piece db {:content content
+                                                         :knot knot
+                                                         :realday (if (empty? realday) "20190101" realday)
+                                                         :knotday knotday
+                                                         :changed (java.time.LocalDateTime/now)})]
                      (ok {:result true
                           :id rid})))
 
@@ -87,8 +87,8 @@
 )
 
 (def rr-app
-  (-> #'app 
-      wrap-reload 
-      (wrap-cors :access-control-allow-origin [#".*"] 
+  (-> #'app
+      wrap-reload
+      (wrap-cors :access-control-allow-origin [#".*"]
                  :access-control-allow-methods [:get :put :post :delete])
       ))
